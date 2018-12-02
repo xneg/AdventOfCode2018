@@ -34,3 +34,31 @@ let firstPuzzle() =
     let result = (freqMap |> Seq.map find2Repeats |> Seq.sum) * 
                  (freqMap |> Seq.map find3Repeats |> Seq.sum)
     printfn "%i" result     
+
+// ===========================================================================
+
+let compareResult s1 s2 =
+    Seq.fold2 (fun acc c1 c2 -> if c1 = c2 then acc @ [c1] else acc) []  s1 s2
+
+let findClosest str data =
+    let length = String.length str
+    data 
+    |> Seq.map(fun el -> compareResult (Input.explode el) (Input.explode str))
+    |> Seq.tryFind (fun el -> el.Length = length - 1)
+
+let commonLetters s =
+    let rec find s =
+        match s with 
+        | [] -> None    
+        | head::tail -> 
+            let searchResult = findClosest head tail
+            if not searchResult.IsNone then searchResult else find tail
+    let result = find s 
+    if (result.IsSome) then result.Value |> Input.implode else ""       
+
+let secondPuzzle() =
+    Input.processFile fileName 
+    |> Seq.map (fun a -> a.[0])
+    |> List.ofSeq
+    |> commonLetters
+    |> printfn "%s"

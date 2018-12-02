@@ -3,6 +3,6 @@
 [<EntryPoint>]
 let main argv =
     Day02.firstPuzzle()
-    // Day01.secondPuzzle()
+    Day02.secondPuzzle()
 
     0 // return an integer exit code
