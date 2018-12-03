@@ -12,6 +12,15 @@ module Input =
                 yield line.Split([|'\t';' '|])
         }
 
+    let readLines (filePath: string) =
+        seq {
+            use fileReader = new StreamReader(filePath)
+
+            while not fileReader.EndOfStream do
+                let line = fileReader.ReadLine()
+                yield line
+        }
+
     let explode (s:string) =
         [for c in s -> c]
 
