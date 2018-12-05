@@ -28,3 +28,9 @@ module Input =
         let sb = System.Text.StringBuilder(xs.Length)
         xs |> List.iter (sb.Append >> ignore)
         sb.ToString()    
+
+    let createMap list =
+        Seq.fold (fun (map: Map<_, int>) c ->
+            if Map.containsKey c map then Map.add c ((Map.find c map) + 1) map
+            else Map.add c 1 map)
+            (Map.empty) list        
