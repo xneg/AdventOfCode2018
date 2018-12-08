@@ -4,7 +4,7 @@ open Utilities
 
 let parseLine line =
     match line with
-    | Input.Regex @"Step (.) must be finished before step (.) can begin." [ parent; child ] -> (parent, child) //printfn "parent %s child %s" parent child
+    | Input.Regex @"Step (.) must be finished before step (.) can begin." [ parent; child ] -> (char parent, char child) //printfn "parent %s child %s" parent child
     | _ -> failwith "Wrong input data"
 
 let createDependencyDictionary list =
@@ -30,8 +30,8 @@ let initialRoots dic =
 let calculatePath data =
     let dic = data |> createDependencyDictionary
 
-    let rec innerRec (data: 'a list) acc =
-        let sortedList = data  |> List.filter (fun a -> not (acc |> List.contains a)) |> List.sort
+    let rec innerRec data acc =
+        let sortedList = data |> List.sort  |> List.filter (fun a -> not (acc |> List.contains a)) |> List.sort
         match sortedList with
         | [] -> acc
         | choise::tail ->
@@ -48,4 +48,30 @@ let data =
     |> Input.readLines
     |> Seq.map (parseLine)
 
-let firstPuzzle() = data |> calculatePath |> List.iter (printf "%s")
+let firstPuzzle() = data |> calculatePath |> List.iter (printf "%c")
+
+let calculateTime workersCount secondsCount data  =
+    let getNToWork n list = list |> List.sort |> List.truncate n |> List.map (fun x -> (x, int x - 64 + secondsCount, 1))
+
+    let dic = data |> createDependencyDictionary
+
+    let initial = initialRoots dic |> getNToWork workersCount
+
+    let rec innerRec atWork finished acc =
+        let listDone, atWork = atWork |> List.partition (fun (_, total, step) -> step = total)
+        let finished = (listDone |> List.map (fun (x, _, _) -> x)) @ finished
+        let atWork = atWork |> List.map (fun (x, total, step) -> (x, total, step + 1))
+        let newCount = workersCount - List.length atWork
+
+        let atWorkList = atWork |> List.map (fun (x, _, _) -> x)
+        let newly = getUnlocked dic finished |> List.filter (fun el -> not (atWorkList |> List.contains el)) |> getNToWork newCount
+
+        let atWork = newly @ atWork
+        let acc = acc + 1
+        if (List.isEmpty atWork) then acc else innerRec atWork finished acc                            
+
+    innerRec initial [] 0
+
+let secondPuzzle() = data |> calculateTime 5 60 |> printfn "%i"
+ 
+        
