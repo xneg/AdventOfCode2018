@@ -2,6 +2,7 @@ namespace Utilities
 
 module Input = 
     open System.IO
+    open System.Text.RegularExpressions
 
     let processFile (filePath : string) =
         seq {
