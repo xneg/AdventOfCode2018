@@ -33,4 +33,9 @@ module Input =
         Seq.fold (fun (map: Map<_, int>) c ->
             if Map.containsKey c map then Map.add c ((Map.find c map) + 1) map
             else Map.add c 1 map)
-            (Map.empty) list        
+            (Map.empty) list   
+
+    let (|Regex|_|) pattern input =
+        let m = Regex.Match(input, pattern)
+        if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ])
+        else None             
