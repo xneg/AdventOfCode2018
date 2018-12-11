@@ -3,79 +3,147 @@ module Day08
 open Utilities
 let input = [2; 3; 0; 3; 10; 11; 12; 1; 1; 0; 1; 99; 2; 1; 1; 2]
 
-let mutable removed = 0
+type Element = {Level: int; ChildNo: int; MetaCount: int; Meta: int list}
 
-type 'T tree = 
-    | Node of 'T * ('T tree list)
-    | Leaf of 'T
+type Tree = 
+    | Node of Element * (Tree list)
+    | Leaf of Element
 
+let getTreeElement t =
+    match t with
+    | Node (el, _) -> el
+    | Leaf (el) -> el
 
-let rec mark data acc parentN childCurrentN childLastN  =
-    if childCurrentN = -1 then
+let foldByIndex i meta data =
+    let rec foldElements i elements acc =
+        match elements with
+        | el::tail when (el |> getTreeElement).Level = i -> foldElements i tail (el :: acc)
+        | el::tail -> 
+            Node({
+                Level = i - 1; 
+                ChildNo = (el |> getTreeElement).ChildNo; 
+                MetaCount = meta |> List.length; 
+                Meta = meta}, acc) :: tail
+        | el -> el    
+    foldElements i data []
 
+let getMetaCount data = (data |> List.head |> getTreeElement).MetaCount
+
+let rec calculate data level childNo totalChilds (nodes :Tree list) =
     match data with
-    | childsCount::metaCount::tail ->
-        if childsCount = 0 then
-            let acc = [tail |> List.truncate metaCount |> List.map(fun x -> (x, childCurrentN))] @ acc
-            let tail = tail |> List.skip metaCount
-            if childCurrentN = childLastN then
-                mark tail acc parentN -1 -1
+    | [] -> []
+    | childs::meta::tail ->
+        if childs = 0 then 
+            let meta, tail = tail |> List.splitAt meta 
+            let leaf = Leaf({Level = level; ChildNo = childNo; MetaCount = meta |> List.length; Meta = meta}) 
+            let nodes = leaf :: nodes  
+            if (childNo <> totalChilds) then
+                 calculate tail level (childNo + 1) totalChilds nodes     
+             else
+                let parentMeta, tail = tail |> List.splitAt parentMetaCount
+                let nodes = foldByIndex level parentMeta nodes
+                calculate tail (level - 1)
+            // else    
+            //     calculate tail (childNo + 1) totalChilds
+        else
+            let leaf = Leaf({Level = level; ChildNo = childNo; MetaCount = meta; Meta = []})
+            calculate tail (level + 1) 1 childs (leaf :: nodes)
+    |[_] -> failwith "Wrong input data" 
 
-// let rec calculate2 data tree =
+
+// let rec calculate acc what data  =
 //     match data with
-//     | [] -> []
+//     | [] -> acc, []
 //     |childsCount::metaCount::tail ->
+//         let acc = acc + childsCount + metaCount
 //         if childsCount = 0 then
-//             let meta = tail |> List.truncate metaCount
-//             Leaf(meta), tail |> List.skip metaCount
+//             acc, tail |> List.skip metaCount
 //         else
-//             // let mutable i = 0
-//             // let mutable l: int list = tail
-//             // while i < childsCount do
-//             //     let newTail = l |> calculate2
-//             //     l <- newTail
-//             //     i <- i + 1
-//             // l |> List.skip metaCount            
+//             let mutable i = 0
+//             let mutable l = tail
+//             while i < childsCount do
+//                  let (acc, newTail) = l |> calculate acc true
+//                  l <- newTail
+//                  i <- i + 1
+//             acc, l |> List.skip metaCount            
 //     |[_] -> failwith "Wrong input data" 
 
-let addNode (t: 'T tree) node =
-    match t with
-    | Node(a, list) -> Node(a, node::list)
-    | Leaf(a) -> Node(a, [node])
 
-// let rec xxx data nth childsCount (tr: int tree) =
+
+
+// let mutable removed = 0
+
+// type 'T tree = 
+//     | Node of 'T * ('T tree list)
+//     | Leaf of 'T
+
+
+// let rec mark data acc parentN childCurrentN childLastN  =
+//     if childCurrentN = -1 then
+
 //     match data with
-//     | [] -> []
-//     |childsCount::metaCount::tail ->
+//     | childsCount::metaCount::tail ->
 //         if childsCount = 0 then
-//             let result = tail |> List.truncate metaCount |> List.sum
+//             let acc = [tail |> List.truncate metaCount |> List.map(fun x -> (x, childCurrentN))] @ acc
 //             let tail = tail |> List.skip metaCount
-//             if nth = childsCount then
-//                 tail, (addNode tr result)
-//             else
-//                 xxx tail (nth + 1) childsCount (addNode tr result)
-//         else
-//             if lastChild then
-//             else
-//                 // addNode tr 
-//     |[_] -> failwith "Wrong input data"                  
+//             if childCurrentN = childLastN then
+//                 mark tail acc parentN -1 -1
 
-let rec calculate acc what data  =
-    match data with
-    | [] -> acc, []
-    |childsCount::metaCount::tail ->
-        let acc = acc + childsCount + metaCount
-        if childsCount = 0 then
-            acc, tail |> List.skip metaCount
-        else
-            let mutable i = 0
-            let mutable l = tail
-            while i < childsCount do
-                 let (acc, newTail) = l |> calculate acc true
-                 l <- newTail
-                 i <- i + 1
-            acc, l |> List.skip metaCount            
-    |[_] -> failwith "Wrong input data"  
+// // let rec calculate2 data tree =
+// //     match data with
+// //     | [] -> []
+// //     |childsCount::metaCount::tail ->
+// //         if childsCount = 0 then
+// //             let meta = tail |> List.truncate metaCount
+// //             Leaf(meta), tail |> List.skip metaCount
+// //         else
+// //             // let mutable i = 0
+// //             // let mutable l: int list = tail
+// //             // while i < childsCount do
+// //             //     let newTail = l |> calculate2
+// //             //     l <- newTail
+// //             //     i <- i + 1
+// //             // l |> List.skip metaCount            
+// //     |[_] -> failwith "Wrong input data" 
+
+// let addNode (t: 'T tree) node =
+//     match t with
+//     | Node(a, list) -> Node(a, node::list)
+//     | Leaf(a) -> Node(a, [node])
+
+// // let rec xxx data nth childsCount (tr: int tree) =
+// //     match data with
+// //     | [] -> []
+// //     |childsCount::metaCount::tail ->
+// //         if childsCount = 0 then
+// //             let result = tail |> List.truncate metaCount |> List.sum
+// //             let tail = tail |> List.skip metaCount
+// //             if nth = childsCount then
+// //                 tail, (addNode tr result)
+// //             else
+// //                 xxx tail (nth + 1) childsCount (addNode tr result)
+// //         else
+// //             if lastChild then
+// //             else
+// //                 // addNode tr 
+// //     |[_] -> failwith "Wrong input data"                  
+
+// let rec calculate acc what data  =
+//     match data with
+//     | [] -> acc, []
+//     |childsCount::metaCount::tail ->
+//         let acc = acc + childsCount + metaCount
+//         if childsCount = 0 then
+//             acc, tail |> List.skip metaCount
+//         else
+//             let mutable i = 0
+//             let mutable l = tail
+//             while i < childsCount do
+//                  let (acc, newTail) = l |> calculate acc true
+//                  l <- newTail
+//                  i <- i + 1
+//             acc, l |> List.skip metaCount            
+//     |[_] -> failwith "Wrong input data"  
 
 // calculate 0 input
 
