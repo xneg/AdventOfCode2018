@@ -1,6 +1,6 @@
-﻿open Day11
+﻿open Day12
 
 [<EntryPoint>]
 let main argv =
-    Day11.secondPuzzle()
+    Day12.firstPuzzle()
     0 // return an integer exit code
